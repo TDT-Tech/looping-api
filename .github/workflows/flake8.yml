@@ -11,10 +11,10 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.12"
+      - name: Install pip and requirements.txt
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
       - name: flake8 Lint
-        uses: py-actions/flake8@v2
-        with:
-          max-line-length: "88"
-          ignore: "E203, E501"
-          exclude: "migrations"
+        run: python -m flake8 --ignore E203,E501  --exclude migrations --max-line-length 88 .
 
