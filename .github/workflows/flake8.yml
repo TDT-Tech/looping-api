@@ -12,7 +12,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: flake8 Lint
-        uses: py-actions:flake8@v2
+        uses: py-actions/flake8@v2
         with:
           max-line-length: "88"
           ignore: "E203"
