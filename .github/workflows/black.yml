@@ -2,6 +2,7 @@ name: black
 on: pull_request
 jobs:
   black:
+    name: Verify formatted with black
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
