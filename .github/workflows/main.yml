@@ -1,7 +1,7 @@
-name: flake8 lint
+name: Django Tests
 on: [push, pull_request]
 jobs:
-  flake8-lint:
+  test-project:
     runs-on: ubuntu-latest
     steps:
       - name: Check out source repository
@@ -12,8 +12,5 @@ jobs:
           python-version: "3.12"
       - name: Install dependencies
         run: pip install -r requirements.txt
-      - name: Install flake8 and run flake8 lint
-        run: |
-          pip install flake8
-          python -m flake8 --ignore E203,E501  --exclude migrations --max-line-length 88 .
-
+      - name: Run django tests
+        run: python manage.py test

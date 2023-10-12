@@ -1,5 +1,5 @@
 name: black
-on: [pull_request]
+on: [push, pull_request]
 jobs:
   black:
     runs-on: ubuntu-latest
@@ -10,10 +10,7 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.12"
-      - name: Install pip and requirements.txt
+      - name: Install black and run black check
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      - name: Run black check
-        run: |
+          pip install black
           black --check --verbose .

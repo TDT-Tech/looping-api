@@ -1,5 +1,5 @@
 name: isort
-on: [pull_request]
+on: [push, pull_request]
 jobs:
   isort:
     runs-on: ubuntu-latest
