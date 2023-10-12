@@ -13,6 +13,8 @@ jobs:
           POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
         ports:
           - 5432:5432
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
 
     steps:
       - name: Check out source repository
@@ -29,5 +31,5 @@ jobs:
           DB_NAME: ${{ secrets.DB_NAME }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_PORT: 5432
         run: python manage.py test
