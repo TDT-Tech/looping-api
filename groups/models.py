@@ -25,7 +25,6 @@ class Member(models.Model):
     class Roles(models.TextChoices):
         ADMIN = "ADMIN"
         MEMBER = "MEMBER"
-        OWNER = "OWNER"
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
