@@ -12,7 +12,7 @@ class MemberSerializer(serializers.ModelSerializer):
 
 
 class GroupSerializer(serializers.ModelSerializer):
-    members = MemberSerializer(source="member_set", many=True)
+    members = serializers.SerializerMethodField()
 
     class Meta:
         model = Group
@@ -32,3 +32,20 @@ class GroupSerializer(serializers.ModelSerializer):
         Member.objects.create(user_id=user.id, group=group, role=Member.Roles.ADMIN)
 
         return group
+
+    def get_members(self, obj):
+        members = Member.objects.filter(group__member__group_id=obj.id)
+        return MemberSerializer(members, many=True).data
+
+
+class RestrictedGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Group
+        fields = [
+            "id",
+            "name",
+            "active",
+            "schedule",
+            "logo_url",
+            "last_issue_date",
+        ]

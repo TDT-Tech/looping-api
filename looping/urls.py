@@ -17,9 +17,12 @@ from django.contrib import admin
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from groups import views
+from groups.views import GroupViewSet
+from users.views import UserViewSet
 
 router = DefaultRouter()
-router.register(r"groups", views.GroupViewSet, basename="group")
+router.register(r"groups", GroupViewSet, basename="group")
+router.register(r"users", UserViewSet, basename="user")
+
 
 urlpatterns = [path("admin/", admin.site.urls), path("", include(router.urls))]
