@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from groups.models import Group
-from groups.serializers import RestrictedGroupSerializer
+from groups.serializers import GroupSerializer
 from users.models import User
 
 
@@ -14,4 +14,4 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_groups(self, obj):
         groups = Group.objects.filter(member__user_id=obj.id)
-        return RestrictedGroupSerializer(groups, many=True).data
+        return GroupSerializer(groups, many=True).data

@@ -36,16 +36,3 @@ class GroupSerializer(serializers.ModelSerializer):
     def get_members(self, obj):
         members = Member.objects.filter(group_id=obj.id)
         return MemberSerializer(members, many=True).data
-
-
-class RestrictedGroupSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Group
-        fields = [
-            "id",
-            "name",
-            "active",
-            "schedule",
-            "logo_url",
-            "last_issue_date",
-        ]
