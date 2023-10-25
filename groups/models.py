@@ -29,6 +29,3 @@ class Member(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     role = models.CharField(choices=Roles.choices, blank=False)
-
-    def __str__(self):
-        return f"{self.user}, {self.group}, {self.role}"
