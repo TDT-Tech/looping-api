@@ -34,7 +34,7 @@ class GroupSerializer(serializers.ModelSerializer):
         return group
 
     def get_members(self, obj):
-        members = Member.objects.filter(group__member__group_id=obj.id)
+        members = Member.objects.filter(group_id=obj.id)
         return MemberSerializer(members, many=True).data
 
 
