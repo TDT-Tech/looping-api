@@ -18,6 +18,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from groups.views import GroupViewSet
+from magiclinklogin.views import LoginView, MagicLinkView
 from users.views import UserViewSet
 
 router = DefaultRouter()
@@ -25,4 +26,9 @@ router.register(r"groups", GroupViewSet, basename="group")
 router.register(r"users", UserViewSet, basename="user")
 
 
-urlpatterns = [path("admin/", admin.site.urls), path("", include(router.urls))]
+urlpatterns = [
+    path("admin/", admin.site.urls),
+    path("login/", LoginView.as_view(), name="login"),
+    path("magic-link/", MagicLinkView.as_view()),
+    path("", include(router.urls)),
+]
