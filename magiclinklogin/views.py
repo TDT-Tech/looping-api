@@ -4,7 +4,6 @@ from django.contrib.auth import authenticate, login
 from django.core import signing
 from django.core.mail import send_mail
 from django.urls import reverse
-from django.utils.crypto import get_random_string
 from django.utils.http import urlencode
 from dotenv import load_dotenv
 from rest_framework import exceptions, permissions, status, views
