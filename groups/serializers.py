@@ -16,7 +16,7 @@ class GroupSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Group
-        fields = [
+        fields = (
             "id",
             "name",
             "active",
@@ -24,7 +24,7 @@ class GroupSerializer(serializers.ModelSerializer):
             "logo_url",
             "last_issue_date",
             "members",
-        ]
+        )
 
     def create(self, validated_data):
         user = validated_data.pop("user")
