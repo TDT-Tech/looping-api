@@ -159,3 +159,5 @@ AUTHENTICATION_BACKENDS = [
     "magiclinklogin.authentication.MagicLinkBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
+
+APPEND_SLASH = True
