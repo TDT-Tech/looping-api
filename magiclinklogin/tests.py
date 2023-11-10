@@ -3,17 +3,17 @@ from django.core import signing
 from django.test import RequestFactory, TestCase
 from rest_framework import exceptions
 
-from groups.models import Group, Member
+from groups.models import Member
 from magiclinklogin.authentication import MagicLinkBackend
 from users.models import User
+from utils.tests.factory import UserWithGroupFactory
 
 
 class MagicLinkBackendTests(TestCase):
     def setUp(self):
         self.factory = RequestFactory()
-        self.user = User.objects.create_user(email="factory@email.com", name="factory")
-        self.group = Group(name="Test Group")
-        self.group.save()
+        self.user = UserWithGroupFactory()
+        self.group = self.user.group_set.first()
         self.auth = MagicLinkBackend()
 
     def test_auth_user_who_doesnt_exist_creates_new_user(self):
@@ -41,7 +41,7 @@ class MagicLinkBackendTests(TestCase):
         self.auth.authenticate(request)
 
         user = User.objects.get(email=magic_link_data["email"])
-        membership = Member.objects.get(user=user)
+        membership = user.member_set.first()
 
         self.assertIsNotNone(membership)
         self.assertEqual(membership.group.id, magic_link_data["group_id"])

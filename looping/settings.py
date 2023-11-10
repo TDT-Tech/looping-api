@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "groups",
     "magiclinklogin",
+    "newsletters",
     "users",
 ]
 
@@ -154,4 +155,9 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 
-AUTHENTICATION_BACKENDS = ["users.authentication.MagicLinkBackend"]
+AUTHENTICATION_BACKENDS = [
+    "magiclinklogin.authentication.MagicLinkBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
+APPEND_SLASH = True
