@@ -79,7 +79,9 @@ class NewsletterViewSetTests(APITestCase):
                 "answer": "Test answer",
             }
         ]
-        response = self.client.post(self.answer_url, data=answer_payload, format="json")
+        response = self.client.post(
+            f"{self.answer_url}batch/", data=answer_payload, format="json"
+        )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(self.newsletter.answer_set.count(), 2)
@@ -99,7 +101,9 @@ class NewsletterViewSetTests(APITestCase):
                 "answer": "Test answer2",
             },
         ]
-        response = self.client.post(self.answer_url, data=answer_payload, format="json")
+        response = self.client.post(
+            f"{self.answer_url}batch/", data=answer_payload, format="json"
+        )
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(self.newsletter.answer_set.count(), 3)
@@ -112,7 +116,9 @@ class NewsletterViewSetTests(APITestCase):
             "question_id": self.newsletter.questions.first().id,
             "answer": "Test answer",
         }
-        response = self.client.post(self.answer_url, data=answer_payload, format="json")
+        response = self.client.post(
+            f"{self.answer_url}batch/", data=answer_payload, format="json"
+        )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -125,7 +131,9 @@ class NewsletterViewSetTests(APITestCase):
                 "answer": "Updated answer",
             }
         ]
-        response = self.client.put(self.answer_url, data=answer_payload, format="json")
+        response = self.client.put(
+            f"{self.answer_url}batch/", data=answer_payload, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         updated_answer = self.newsletter.answer_set.get(id=self.answer.id)
         self.assertEqual(updated_answer.answer, answer_payload[0]["answer"])
@@ -146,7 +154,9 @@ class NewsletterViewSetTests(APITestCase):
             }
             for a in new_answers
         ]
-        response = self.client.put(self.answer_url, data=answer_payload, format="json")
+        response = self.client.put(
+            f"{self.answer_url}batch/", data=answer_payload, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         for i, answer in enumerate(new_answers):
             updated_answer = self.newsletter.answer_set.get(id=answer.id)
