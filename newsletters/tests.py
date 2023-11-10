@@ -72,6 +72,20 @@ class NewsletterViewSetTests(APITestCase):
         self.assertEqual(data[0]["id"], self.answer.id)
         self.assertEqual(data[0]["answer"], self.answer.answer)
 
+    def test_retrieve_newsletter_answers_does_not_return_other_newsletter_answers(self):
+        newsletter = NewsletterFactory(
+            group=self.group, questions=[QuestionFactory(group=self.group)]
+        )
+        new_answer = AnswerFactory(
+            question=newsletter.questions.first(),
+            newsletter=newsletter,
+            submitter="Test User",
+        )
+        response = self.client.get(self.answer_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertNotEqual(response.data[0]["id"], new_answer.id)
+
     def test_add_newsletter_answer(self):
         answer_payload = [
             {
