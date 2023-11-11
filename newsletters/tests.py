@@ -4,7 +4,7 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from newsletters.models import Newsletter
+from newsletters.models import Answer, Newsletter
 from newsletters.serializers import NewsletterCreateSerializer, NewsletterSerializer
 from utils.tests.factory import (
     AnswerFactory,
@@ -19,6 +19,7 @@ class NewsletterSerializerTests(TestCase):
         self.user = UserWithGroupFactory()
         self.group = self.user.group_set.first()
         self.question = QuestionFactory(group=self.group)
+        self.second_question = QuestionFactory(group=self.group)
 
     def test_create_succeeds(self):
         serializer_data = {
@@ -49,8 +50,40 @@ class NewsletterSerializerTests(TestCase):
 
         self.assertFalse(updated_newsletter.questions.exists())
 
+    def test_removing_question_from_newsletter_deletes_answer(self):
+        newsletter = NewsletterFactory(
+            questions=[self.question, self.second_question], group=self.group
+        )
+        AnswerFactory(question=self.question, newsletter=newsletter)
+        AnswerFactory(question=self.second_question, newsletter=newsletter)
+        self.assertTrue(
+            Answer.objects.filter(
+                question_id=self.question.id, newsletter=newsletter
+            ).exists()
+        )
 
-class NewsletterViewSetTests(APITestCase):
+        updated_data = {
+            "group": self.group.id,
+            "questions": [model_to_dict(self.second_question)],
+            "status": Newsletter.Status.INPROGRESS,
+        }
+        updated_serializer = NewsletterSerializer(newsletter, data=updated_data)
+        updated_serializer.is_valid()
+        updated_serializer.save()
+
+        self.assertFalse(
+            Answer.objects.filter(
+                question_id=self.question.id, newsletter=newsletter
+            ).exists()
+        )
+        self.assertTrue(
+            Answer.objects.filter(
+                question_id=self.second_question.id, newsletter=newsletter
+            ).exists()
+        )
+
+
+class AnswerViewSetTests(APITestCase):
     def setUp(self):
         self.user = UserWithGroupFactory()
         self.group = self.user.group_set.first()
@@ -85,6 +118,38 @@ class NewsletterViewSetTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertNotEqual(response.data[0]["id"], new_answer.id)
+
+    def test_retrieve_newsletter_answer_fails_if_newsletter_does_not_exist(self):
+        response = self.client.get("/newsletters/2323232/answers/")
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_add_newsletter_answer_fails_if_newsletter_does_not_exist(self):
+        answer_payload = [
+            {
+                "question_id": self.newsletter.questions.first().id,
+                "answer": "Test answer",
+            }
+        ]
+        response = self.client.post(
+            "/newsletters/12/answers/batch/", data=answer_payload, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_add_newsletter_answer_fails_if_newsletter_not_in_progress(self):
+        answer_payload = [
+            {
+                "question_id": self.newsletter.questions.first().id,
+                "answer": "Test answer",
+            }
+        ]
+        self.newsletter.status = Newsletter.Status.DELIVERED
+        self.newsletter.save()
+        response = self.client.post(
+            f"{self.answer_url}batch/", data=answer_payload, format="json"
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_newsletter_answer(self):
         answer_payload = [
@@ -135,6 +200,31 @@ class NewsletterViewSetTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_add_newsletter_answer_fails_when_question_does_not_exist(self):
+        answer_payload = [{"question_id": 25252, "answer": "Test answer"}]
+
+        self.client.post(f"{self.answer_url}batch/", data=answer_payload, format="json")
+        with self.assertRaises(Answer.DoesNotExist):
+            self.newsletter.answer_set.get(question_id=answer_payload[0]["question_id"])
+
+    def test_add_newsletter_answer_fails_with_question_not_in_newsletter(self):
+        newsletter = NewsletterFactory(
+            group=self.group, questions=[QuestionFactory(group=self.group)]
+        )
+        question = newsletter.questions.first()
+        answer_payload = [
+            {
+                "question_id": question.id,
+                "answer": "Test answer",
+            }
+        ]
+        response = self.client.post(
+            f"{self.answer_url}batch/", data=answer_payload, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        with self.assertRaises(Answer.DoesNotExist):
+            self.newsletter.answer_set.get(question_id=question.id)
 
     def test_update_newsletter_answer(self):
         answer_payload = [

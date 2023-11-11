@@ -1,3 +1,4 @@
+from django.http import HttpResponseNotFound
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -22,6 +23,13 @@ class AnswerViewSet(viewsets.ViewSet):
     serializer_class = AnswerSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
+    def dispatch(self, request, *args, **kwargs):
+        newsletter_id = self.kwargs["newsletter_id"]
+        self.newsletter = Newsletter.objects.filter(id=newsletter_id).first()
+        if not self.newsletter:
+            return HttpResponseNotFound(f"Newsletter with id {newsletter_id} not found")
+        return super().dispatch(request, *args, **kwargs)
+
     def get_queryset(self):
         return self.queryset.filter(newsletter_id=self.kwargs["newsletter_id"])
 
@@ -38,17 +46,34 @@ class AnswerViewSet(viewsets.ViewSet):
             else AnswerSerializer(data=request.data, many=True)
         )
         serializer.is_valid(raise_exception=True)
+
+        # Check if newsletter is valid to add answers to.
+        if self.newsletter.status != Newsletter.Status.INPROGRESS:
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={"detail": "Newsletter is not in progress"},
+            )
+
         # We want to bulk create new answers with POST
         if request.method == "POST":
             answers = []
             submitter = request.user.name
-            newsletter_id = self.kwargs["newsletter_id"]
+            # Check if answers to be added are for questions in the newsletter
+            question_ids = set(answer["question_id"] for answer in serializer.data)
+            questions_in_newsletters = set(
+                self.newsletter.questions.all().values_list("id", flat=True)
+            )
+            if not question_ids.issubset(questions_in_newsletters):
+                return Response(
+                    status=status.HTTP_400_BAD_REQUEST,
+                    data={"message": "Questions not found in newsletter"},
+                )
             for answer in serializer.data:
                 new_answer = Answer(
                     question_id=answer["question_id"],
                     answer=answer["answer"],
                     submitter=submitter,
-                    newsletter_id=newsletter_id,
+                    newsletter_id=self.newsletter.id,
                 )
                 answers.append(new_answer)
             Answer.objects.bulk_create(answers)
@@ -57,7 +82,7 @@ class AnswerViewSet(viewsets.ViewSet):
         else:
             answer_data = {a["id"]: a["answer"] for a in serializer.data}
             answers = {
-                a.id: a for a in Answer.objects.filter(id__in=answer_data.keys())
+                a.id: a for a in self.get_queryset().filter(id__in=answer_data.keys())
             }
             updated_answers = []
             for answer_id, updated_answer in answer_data.items():
