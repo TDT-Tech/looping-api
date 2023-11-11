@@ -50,6 +50,20 @@ class NewsletterSerializerTests(TestCase):
 
         self.assertFalse(updated_newsletter.questions.exists())
 
+    def test_update_fails_if_newsletter_status_not_upcoming_or_inprogress(self):
+        newsletter = NewsletterFactory(questions=[self.question], group=self.group)
+        self.assertEqual(newsletter.questions.first(), self.question)
+
+        updated_data = {
+            "group": self.group.id,
+            "questions": [],
+            "status": Newsletter.Status.DELIVERED,
+        }
+        updated_serializer = NewsletterSerializer(newsletter, data=updated_data)
+        updated_serializer.is_valid()
+        updated_newsletter = updated_serializer.save()
+        self.assertTrue(updated_newsletter.questions.exists())
+
     def test_removing_question_from_newsletter_deletes_answer(self):
         newsletter = NewsletterFactory(
             questions=[self.question, self.second_question], group=self.group
