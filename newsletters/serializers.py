@@ -51,25 +51,29 @@ class NewsletterSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance.status = validated_data.get("status", instance.status)
         instance.issue_date = validated_data.get("issue_date", instance.issue_date)
-        questions_to_add = validated_data.pop("questions")
+        # Only update questions for Upcoming or In-Progress newsletters
+        if instance.status in (
+            Newsletter.Status.UPCOMING,
+            Newsletter.Status.INPROGRESS,
+        ):
+            questions_to_add = validated_data.pop("questions")
+            # Check if any questions removed from newsletter and delete existing answers
+            questions_in_newsletter = set(
+                instance.questions.all().values_list("id", flat=True)
+            )
+            question_ids = set(q["id"] for q in questions_to_add)
+            removed_questions_ids = questions_in_newsletter - question_ids
+            for question_id in removed_questions_ids:
+                Answer.objects.filter(
+                    question_id=question_id, newsletter_id=instance.id
+                ).delete()
 
-        # Check if any questions removed from newsletter and delete any existing answers
-        questions_in_newsletter = set(
-            instance.questions.all().values_list("id", flat=True)
-        )
-        question_ids = set(q["id"] for q in questions_to_add)
-        removed_questions_ids = questions_in_newsletter - question_ids
-        for question_id in removed_questions_ids:
-            Answer.objects.filter(
-                question_id=question_id, newsletter_id=instance.id
-            ).delete()
-
-        questions = []
-        for question in questions_to_add:
-            q = Question.objects.filter(pk=question["id"]).first()
-            if q:
-                questions.append(q)
-        instance.questions.set(questions)
+            questions = []
+            for question in questions_to_add:
+                q = Question.objects.filter(pk=question["id"]).first()
+                if q:
+                    questions.append(q)
+            instance.questions.set(questions)
         instance.save()
         return instance
 

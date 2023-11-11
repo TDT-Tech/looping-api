@@ -11,6 +11,7 @@ class Question(models.Model):
 
 class Newsletter(models.Model):
     class Status(models.TextChoices):
+        UPCOMING = "UPCOMING"
         INPROGRESS = "INPROGRESS"
         DELIVERED = "DELIVERED"
         INACTIVE = "INACTIVE"
