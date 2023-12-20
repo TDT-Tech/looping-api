@@ -1,4 +1,4 @@
-from django.contrib.auth.backends import BaseBackend
+from django.contrib.auth.backends import ModelBackend
 from django.core import signing
 from rest_framework import exceptions
 
@@ -6,7 +6,7 @@ from groups.models import Group, Member
 from users.models import User
 
 
-class MagicLinkBackend(BaseBackend):
+class MagicLinkBackend(ModelBackend):
     def authenticate(self, request):
         """
         Authenticates the given `email` provided in the token. If `email` does not
@@ -33,3 +33,9 @@ class MagicLinkBackend(BaseBackend):
             return user
         except Exception:
             raise exceptions.AuthenticationFailed(detail="Invalid or expired token")
+
+    def get_user(self, id):
+        try:
+            return User.objects.get(pk=id)
+        except User.DoesNotExist:
+            return None
