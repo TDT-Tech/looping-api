@@ -34,8 +34,21 @@ class GroupAdminFactory(factory.django.DjangoModelFactory):
     role = Member.Roles.ADMIN
 
 
+class GroupMemberFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Member
+
+    user = factory.SubFactory(UserFactory)
+    group = factory.SubFactory(GroupFactory)
+    role = Member.Roles.MEMBER
+
+
 class UserWithGroupFactory(UserFactory):
     membership = factory.RelatedFactory(GroupAdminFactory, factory_related_name="user")
+
+
+class UserWithGroupMemberFactory(UserFactory):
+    membership = factory.RelatedFactory(GroupMemberFactory, factory_related_name="user")
 
 
 class QuestionFactory(factory.django.DjangoModelFactory):
