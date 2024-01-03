@@ -13,5 +13,5 @@ jobs:
       - name: Install flake8 and run flake8 lint
         run: |
           pip install flake8
-          python -m flake8 --ignore E203,E501,W504  --exclude migrations --max-line-length 88 .
+          python -m flake8 --ignore E203,E501,W503  --exclude migrations --max-line-length 88 .
 
