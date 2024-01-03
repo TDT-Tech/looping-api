@@ -1,4 +1,4 @@
-from rest_framework import permissions, viewsets
+from rest_framework import viewsets
 
 from groups.models import Group
 from groups.permissions import AdminAllButMemberReadOnly

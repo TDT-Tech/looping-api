@@ -22,9 +22,8 @@ class AdminAllButMemberReadOnly(permissions.BasePermission):
         if membership:
             if request.method in permissions.SAFE_METHODS:
                 return True
-
             if (
-                membership.role is Member.Roles.ADMIN
+                membership.role == Member.Roles.ADMIN
                 and request.method in self.restricted_methods
             ):
                 return True
