@@ -1,6 +1,7 @@
-from rest_framework import mixins, permissions, viewsets
+from rest_framework import mixins, viewsets
 
 from users.models import User
+from users.permissions import IsOwner
 from users.serializers import UserSerializer
 
 
@@ -12,4 +13,4 @@ class UserViewSet(
 ):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsOwner]
