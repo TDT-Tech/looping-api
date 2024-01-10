@@ -1,7 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
+from rest_framework import status
+from rest_framework.test import APITestCase
 
 from users.models import User
+from utils.tests.factory import UserFactory
 
 
 # Create your tests here.
@@ -39,3 +42,44 @@ class UsersManagersTests(TestCase):
                 name="Tommy Nguyen",
                 is_superuser=False,
             )
+
+
+class IsOwnerPermissionTests(APITestCase):
+    def setUp(self):
+        self.user = UserFactory()
+        self.second_user = UserFactory(email="test@test.com")
+        self.url = "/users/{}/"
+        self.client.force_authenticate(user=self.user)
+
+    def test_user_can_access_self(self):
+        response = self.client.get(self.url.format(self.user.id))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_user_cant_access_other_user(self):
+        response = self.client.get(self.url.format(self.second_user.id))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_user_can_update_self(self):
+        update_data = {"name": "Updated", "email": self.user.email}
+        response = self.client.put(
+            self.url.format(self.user.id),
+            data=update_data,
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.json()
+        self.assertEqual(data["name"], update_data["name"])
+
+    def test_user_cant_update_other_user(self):
+        response = self.client.put(
+            self.url.format(self.second_user.id),
+            data={"name": "updated", "email": self.second_user.email},
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_user_can_delete_self(self):
+        response = self.client.delete(self.url.format(self.user.id))
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_user_cant_delete_other_user(self):
+        response = self.client.delete(self.url.format(self.second_user.id))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
