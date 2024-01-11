@@ -8,8 +8,10 @@ from newsletters.models import Answer, Newsletter
 from newsletters.serializers import NewsletterCreateSerializer, NewsletterSerializer
 from utils.tests.factory import (
     AnswerFactory,
+    GroupMemberFactory,
     NewsletterFactory,
     QuestionFactory,
+    UserFactory,
     UserWithGroupFactory,
 )
 
@@ -280,3 +282,54 @@ class AnswerViewSetTests(APITestCase):
             updated_answer = self.newsletter.answer_set.get(id=answer.id)
             self.assertIsNotNone(updated_answer)
             self.assertEqual(updated_answer.answer, answer_payload[i]["answer"])
+
+
+class NewsletterAdminAllButMemberReadOnlyPermissionsTests(APITestCase):
+    def setUp(self):
+        self.user = UserWithGroupFactory()
+        self.group = self.user.group_set.first()
+        self.newsletter = NewsletterFactory(
+            group=self.group, questions=[QuestionFactory(group=self.group)]
+        )
+        self.user_with_no_group = UserFactory(email="test@test.com")
+        self.newsletter_url = f"/newsletters/{self.newsletter.id}/"
+        self.update_payload = {"status": Newsletter.Status.UPCOMING}
+
+    def test_user_cannot_access_newsletter_without_membership(self):
+        self.client.force_authenticate(user=self.user_with_no_group)
+        response = self.client.get(self.newsletter_url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_user_can_access_newsletter_with_membership(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(self.newsletter_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_group_member_cannot_update_newsletter(self):
+        GroupMemberFactory(
+            user=self.user_with_no_group, group=self.user.group_set.first()
+        )
+        self.client.force_authenticate(user=self.user_with_no_group)
+        response = self.client.patch(self.newsletter_url, data=self.update_payload)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_group_member_cannot_delete_newsletter(self):
+        GroupMemberFactory(
+            user=self.user_with_no_group, group=self.user.group_set.first()
+        )
+        self.client.force_authenticate(user=self.user_with_no_group)
+        response = self.client.delete(self.newsletter_url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_group_admin_can_update_newsletter(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.patch(self.newsletter_url, data=self.update_payload)
+        data = response.json()
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(data["status"], self.update_payload["status"])
+
+    def test_group_admin_can_delete_newsletter(self):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.delete(self.newsletter_url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertIsNone(self.group.newsletter_set.first())

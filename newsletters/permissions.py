@@ -4,7 +4,7 @@ from groups.models import Member
 from utils.utils import get_membership
 
 
-class AdminAllButMemberReadOnly(permissions.BasePermission):
+class NewsletterAdminAllMemberReadOnly(permissions.BasePermission):
     restricted_methods = ("PUT", "PATCH", "DELETE")
 
     def has_permission(self, request, view):
@@ -15,7 +15,7 @@ class AdminAllButMemberReadOnly(permissions.BasePermission):
         if request.user.is_superuser:
             return True
 
-        membership = get_membership(obj, request.user)
+        membership = get_membership(obj.group, request.user)
 
         if membership:
             if request.method in permissions.SAFE_METHODS:
