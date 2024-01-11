@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from newsletters.models import Answer, Newsletter, Question
+from newsletters.permissions import NewsletterAdminAllMemberReadOnly
 from newsletters.serializers import (
     AnswerCreateSerializer,
     AnswerSerializer,
@@ -15,7 +16,7 @@ from newsletters.serializers import (
 class NewsletterViewSet(viewsets.ModelViewSet):
     queryset = Newsletter.objects.all()
     serializer_class = NewsletterSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [NewsletterAdminAllMemberReadOnly]
 
 
 class AnswerViewSet(viewsets.ViewSet):

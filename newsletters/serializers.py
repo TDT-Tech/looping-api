@@ -56,7 +56,7 @@ class NewsletterSerializer(serializers.ModelSerializer):
             Newsletter.Status.UPCOMING,
             Newsletter.Status.INPROGRESS,
         ):
-            questions_to_add = validated_data.pop("questions")
+            questions_to_add = validated_data.pop("questions", [])
             # Check if any questions removed from newsletter and delete existing answers
             questions_in_newsletter = set(
                 instance.questions.all().values_list("id", flat=True)
