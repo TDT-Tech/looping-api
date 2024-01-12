@@ -335,7 +335,7 @@ class NewsletterAdminAllButMemberReadOnlyPermissionsTests(APITestCase):
         self.assertIsNone(self.group.newsletter_set.first())
 
 
-class IsGroupMember(APITestCase):
+class IsGroupMemberPermissionTests(APITestCase):
     def setUp(self):
         self.user = UserWithGroupFactory()
         self.user_without_group = UserFactory(email="test@test.com")
@@ -346,10 +346,31 @@ class IsGroupMember(APITestCase):
         self.answer = AnswerFactory(
             question=self.newsletter.questions.first(), newsletter=self.newsletter
         )
+        self.answer_payload = {
+            "question_id": self.newsletter.questions.first().id,
+            "answer": "Test answer",
+        }
         self.answer_url = f"/newsletters/{self.newsletter.id}/answers/"
-        # self.client.force_authenticate(user=self.user)
+        self.client.force_authenticate(user=self.user)
 
     def test_non_member_cannot_access_answers(self):
         self.client.force_authenticate(user=self.user_without_group)
         response = self.client.get(self.answer_url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_member_can_access_answers(self):
+        response = self.client.get(self.answer_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_member_can_add_answers(self):
+        response = self.client.post(
+            f"{self.answer_url}batch/", data=[self.answer_payload], format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_non_member_cannot_add_answers(self):
+        self.client.force_authenticate(user=self.user_without_group)
+        response = self.client.post(
+            f"{self.answer_url}batch/", data=self.answer_payload, format="json"
+        )
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
