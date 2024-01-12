@@ -1,16 +1,17 @@
-from django.http import HttpResponseNotFound
+from django.http import HttpResponseForbidden, HttpResponseNotFound
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from newsletters.models import Answer, Newsletter, Question
-from newsletters.permissions import NewsletterAdminAllMemberReadOnly
+from newsletters.permissions import IsGroupMember, NewsletterAdminAllMemberReadOnly
 from newsletters.serializers import (
     AnswerCreateSerializer,
     AnswerSerializer,
     NewsletterSerializer,
     QuestionSerializer,
 )
+from utils.utils import get_membership
 
 
 class NewsletterViewSet(viewsets.ModelViewSet):
@@ -22,13 +23,23 @@ class NewsletterViewSet(viewsets.ModelViewSet):
 class AnswerViewSet(viewsets.ViewSet):
     queryset = Answer.objects.all()
     serializer_class = AnswerSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [IsGroupMember]
 
     def dispatch(self, request, *args, **kwargs):
+        req = self.initialize_request(request, *args, **kwargs)
         newsletter_id = self.kwargs["newsletter_id"]
-        self.newsletter = Newsletter.objects.filter(id=newsletter_id).first()
+        self.newsletter = (
+            Newsletter.objects.prefetch_related("group")
+            .filter(id=newsletter_id)
+            .first()
+        )
         if not self.newsletter:
             return HttpResponseNotFound(f"Newsletter with id {newsletter_id} not found")
+        # object permissions aren't ran for list methods, need to manually check here
+        # for list endpoint
+        membership = get_membership(self.newsletter.group, req.user)
+        if not membership:
+            return HttpResponseForbidden()
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):

@@ -333,3 +333,23 @@ class NewsletterAdminAllButMemberReadOnlyPermissionsTests(APITestCase):
         response = self.client.delete(self.newsletter_url)
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
         self.assertIsNone(self.group.newsletter_set.first())
+
+
+class IsGroupMember(APITestCase):
+    def setUp(self):
+        self.user = UserWithGroupFactory()
+        self.user_without_group = UserFactory(email="test@test.com")
+        self.group = self.user.group_set.first()
+        self.newsletter = NewsletterFactory(
+            group=self.group, questions=[QuestionFactory(group=self.group)]
+        )
+        self.answer = AnswerFactory(
+            question=self.newsletter.questions.first(), newsletter=self.newsletter
+        )
+        self.answer_url = f"/newsletters/{self.newsletter.id}/answers/"
+        # self.client.force_authenticate(user=self.user)
+
+    def test_non_member_cannot_access_answers(self):
+        self.client.force_authenticate(user=self.user_without_group)
+        response = self.client.get(self.answer_url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
