@@ -107,12 +107,19 @@ class AnswerViewSetTests(APITestCase):
             group=self.group, questions=[QuestionFactory(group=self.group)]
         )
         self.answer = AnswerFactory(
-            question=self.newsletter.questions.first(), newsletter=self.newsletter
+            question=self.newsletter.questions.first(),
+            newsletter=self.newsletter,
+            submitter=self.user.name,
         )
         self.answer_url = f"/newsletters/{self.newsletter.id}/answers/"
         self.client.force_authenticate(user=self.user)
 
-    def test_retrieve_newsletter_answers(self):
+    def test_retrieve_newsletter_answers_returns_users_answers(self):
+        AnswerFactory(
+            question=self.newsletter.questions.first(),
+            newsletter=self.newsletter,
+            submitter="test",
+        )
         response = self.client.get(self.answer_url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -120,6 +127,7 @@ class AnswerViewSetTests(APITestCase):
         self.assertEqual(1, len(data))
         self.assertEqual(data[0]["id"], self.answer.id)
         self.assertEqual(data[0]["answer"], self.answer.answer)
+        self.assertEqual(data[0]["submitter"], self.user.name)
 
     def test_retrieve_newsletter_answers_does_not_return_other_newsletter_answers(self):
         newsletter = NewsletterFactory(
@@ -261,7 +269,9 @@ class AnswerViewSetTests(APITestCase):
     def test_update_newsletter_answers(self):
         new_answers = [
             AnswerFactory(
-                question=self.newsletter.questions.first(), newsletter=self.newsletter
+                question=self.newsletter.questions.first(),
+                newsletter=self.newsletter,
+                submitter=self.user.name,
             )
             for _ in range(2)
         ]

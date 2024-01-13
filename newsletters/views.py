@@ -43,7 +43,10 @@ class AnswerViewSet(viewsets.ViewSet):
         return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
-        return self.queryset.filter(newsletter_id=self.kwargs["newsletter_id"])
+        user = self.request.user
+        return self.queryset.filter(
+            newsletter_id=self.kwargs["newsletter_id"], submitter=user.name
+        )
 
     def list(self, request, **kwargs):
         answers = self.get_queryset()
@@ -94,13 +97,17 @@ class AnswerViewSet(viewsets.ViewSet):
         else:
             answer_data = {a["id"]: a["answer"] for a in serializer.data}
             answers = {
-                a.id: a for a in self.get_queryset().filter(id__in=answer_data.keys())
+                a.id: a
+                for a in self.get_queryset().filter(
+                    id__in=answer_data.keys(), submitter=request.user.name
+                )
             }
             updated_answers = []
             for answer_id, updated_answer in answer_data.items():
-                answer = answers[answer_id]
-                answer.answer = updated_answer
-                updated_answers.append(answer)
+                answer = answers.get(answer_id, None)
+                if answer:
+                    answer.answer = updated_answer
+                    updated_answers.append(answer)
             Answer.objects.bulk_update(updated_answers, fields=["answer"])
             return Response(status=status.HTTP_200_OK)
 

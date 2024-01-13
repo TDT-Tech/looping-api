@@ -43,8 +43,3 @@ class IsGroupMember(permissions.BasePermission):
         if membership:
             return True
         return False
-
-
-class IsAnswerOwner(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-        return obj.submitter == request.user.name
