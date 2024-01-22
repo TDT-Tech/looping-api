@@ -80,6 +80,6 @@ class AnswerFactory(factory.django.DjangoModelFactory):
         model = Answer
 
     answer = faker.text()
-    submitter = faker.name()
+    submitter = factory.SubFactory(UserFactory)
     question = factory.SubFactory(QuestionFactory)
     newsletter = factory.SubFactory(NewsletterFactory)

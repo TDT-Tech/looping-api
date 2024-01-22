@@ -1,6 +1,7 @@
 from django.db import models
 
 from groups.models import Group
+from users.models import User
 
 
 class Question(models.Model):
@@ -24,6 +25,6 @@ class Newsletter(models.Model):
 
 class Answer(models.Model):
     answer = models.TextField()
-    submitter = models.CharField(max_length=100)
+    submitter = models.ForeignKey(User, on_delete=models.CASCADE)
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
     newsletter = models.ForeignKey(Newsletter, on_delete=models.CASCADE)

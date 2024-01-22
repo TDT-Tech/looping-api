@@ -27,3 +27,19 @@ class NewsletterAdminAllMemberReadOnly(permissions.BasePermission):
                 return True
 
         return False
+
+
+class IsGroupMember(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.user.is_authenticated:
+            return True
+
+    def has_object_permission(self, request, view, obj):
+        if request.user.is_superuser:
+            return True
+
+        membership = get_membership(obj.newsletter.group, request.user)
+
+        if membership:
+            return True
+        return False

@@ -3,6 +3,7 @@ import datetime
 from rest_framework import serializers
 
 from newsletters.models import Answer, Newsletter, Question
+from users.models import User
 from utils.utils import calculate_next_issue_date
 
 
@@ -96,3 +97,12 @@ class AnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Answer
         fields = ("id", "answer", "submitter", "question")
+
+    def validate_submitter(self, submitter_id):
+        try:
+            data = User.objects.get(email=submitter_id)
+        except Exception as e:
+            raise serializers.ValidationError(
+                f"{e}: User with {submitter_id} doesn't exist"
+            )
+        return data
