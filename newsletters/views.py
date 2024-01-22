@@ -45,7 +45,7 @@ class AnswerViewSet(viewsets.ViewSet):
     def get_queryset(self):
         user = self.request.user
         return self.queryset.filter(
-            newsletter_id=self.kwargs["newsletter_id"], submitter=user.name
+            newsletter_id=self.kwargs["newsletter_id"], submitter=user
         )
 
     def list(self, request, **kwargs):
@@ -72,7 +72,7 @@ class AnswerViewSet(viewsets.ViewSet):
         # We want to bulk create new answers with POST
         if request.method == "POST":
             answers = []
-            submitter = request.user.name
+            submitter = request.user
             # Check if answers to be added are for questions in the newsletter
             question_ids = set(answer["question_id"] for answer in serializer.data)
             questions_in_newsletters = set(
@@ -99,7 +99,7 @@ class AnswerViewSet(viewsets.ViewSet):
             answers = {
                 a.id: a
                 for a in self.get_queryset().filter(
-                    id__in=answer_data.keys(), submitter=request.user.name
+                    id__in=answer_data.keys(), submitter=request.user
                 )
             }
             updated_answers = []

@@ -70,8 +70,12 @@ class NewsletterSerializerTests(TestCase):
         newsletter = NewsletterFactory(
             questions=[self.question, self.second_question], group=self.group
         )
-        AnswerFactory(question=self.question, newsletter=newsletter)
-        AnswerFactory(question=self.second_question, newsletter=newsletter)
+        AnswerFactory(
+            question=self.question, newsletter=newsletter, submitter=self.user
+        )
+        AnswerFactory(
+            question=self.second_question, newsletter=newsletter, submitter=self.user
+        )
         self.assertTrue(
             Answer.objects.filter(
                 question_id=self.question.id, newsletter=newsletter
@@ -109,7 +113,7 @@ class AnswerViewSetTests(APITestCase):
         self.answer = AnswerFactory(
             question=self.newsletter.questions.first(),
             newsletter=self.newsletter,
-            submitter=self.user.name,
+            submitter=self.user,
         )
         self.answer_url = f"/newsletters/{self.newsletter.id}/answers/"
         self.client.force_authenticate(user=self.user)
@@ -118,7 +122,7 @@ class AnswerViewSetTests(APITestCase):
         AnswerFactory(
             question=self.newsletter.questions.first(),
             newsletter=self.newsletter,
-            submitter="test",
+            submitter=UserFactory(email="test@test.com", name="Test"),
         )
         response = self.client.get(self.answer_url)
 
@@ -127,7 +131,7 @@ class AnswerViewSetTests(APITestCase):
         self.assertEqual(1, len(data))
         self.assertEqual(data[0]["id"], self.answer.id)
         self.assertEqual(data[0]["answer"], self.answer.answer)
-        self.assertEqual(data[0]["submitter"], self.user.name)
+        self.assertEqual(data[0]["submitter"], self.user.id)
 
     def test_retrieve_newsletter_answers_does_not_return_other_newsletter_answers(self):
         newsletter = NewsletterFactory(
@@ -136,7 +140,7 @@ class AnswerViewSetTests(APITestCase):
         new_answer = AnswerFactory(
             question=newsletter.questions.first(),
             newsletter=newsletter,
-            submitter="Test User",
+            submitter=UserFactory(email="test@test.com"),
         )
         response = self.client.get(self.answer_url)
 
@@ -254,7 +258,7 @@ class AnswerViewSetTests(APITestCase):
         answer_payload = [
             {
                 "id": self.answer.id,
-                "submitter": self.answer.submitter,
+                "submitter": self.user.id,
                 "question": model_to_dict(self.answer.question),
                 "answer": "Updated answer",
             }
@@ -271,14 +275,14 @@ class AnswerViewSetTests(APITestCase):
             AnswerFactory(
                 question=self.newsletter.questions.first(),
                 newsletter=self.newsletter,
-                submitter=self.user.name,
+                submitter=self.user,
             )
             for _ in range(2)
         ]
         answer_payload = [
             {
                 "id": a.id,
-                "submitter": a.submitter,
+                "submitter": self.user.id,
                 "question": model_to_dict(a.question),
                 "answer": "Updated answer",
             }
@@ -354,7 +358,9 @@ class IsGroupMemberPermissionTests(APITestCase):
             group=self.group, questions=[QuestionFactory(group=self.group)]
         )
         self.answer = AnswerFactory(
-            question=self.newsletter.questions.first(), newsletter=self.newsletter
+            question=self.newsletter.questions.first(),
+            newsletter=self.newsletter,
+            submitter=self.user,
         )
         self.answer_payload = {
             "question_id": self.newsletter.questions.first().id,
