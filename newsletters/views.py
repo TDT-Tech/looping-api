@@ -2,7 +2,6 @@ from django.http import HttpResponseForbidden, HttpResponseNotFound
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 
 from newsletters.models import Answer, Newsletter, Question
@@ -44,7 +43,8 @@ class NewsletterViewSet(viewsets.ModelViewSet):
         return Response(
             status=status.HTTP_400_BAD_REQUEST,
             data={
-                "message": "Unable to remove questions for Inactive or Delivered Newsletter"
+                "message": "Unable to remove questions for Inactive or Delivered \
+                Newsletter"
             },
         )
 
