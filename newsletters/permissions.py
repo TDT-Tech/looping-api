@@ -18,7 +18,7 @@ class NewsletterAdminAllMemberReadOnly(permissions.BasePermission):
         membership = get_membership(obj.group, request.user)
 
         if membership:
-            if request.method in permissions.SAFE_METHODS:
+            if request.method in ["POST", *permissions.SAFE_METHODS]:
                 return True
             if (
                 membership.role == Member.Roles.ADMIN

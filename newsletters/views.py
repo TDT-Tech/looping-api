@@ -1,6 +1,8 @@
 from django.http import HttpResponseForbidden, HttpResponseNotFound
+from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound
 from rest_framework.response import Response
 
 from newsletters.models import Answer, Newsletter, Question
@@ -9,6 +11,7 @@ from newsletters.serializers import (
     AnswerCreateSerializer,
     AnswerSerializer,
     NewsletterSerializer,
+    QuestionCreateSerializer,
     QuestionSerializer,
 )
 from utils.utils import get_membership
@@ -18,6 +21,60 @@ class NewsletterViewSet(viewsets.ModelViewSet):
     queryset = Newsletter.objects.all()
     serializer_class = NewsletterSerializer
     permission_classes = [NewsletterAdminAllMemberReadOnly]
+
+    @action(detail=True, methods=["GET"])
+    def questions(self, request, pk=None):
+        newsletter = self.get_object()
+        questions = newsletter.questions.all()
+        serializer = QuestionSerializer(questions, many=True)
+        return Response(serializer.data)
+
+    @action(
+        detail=True, methods=["DELETE"], url_path="questions/(?P<question_pk>[^/.]+)"
+    )
+    def remove_question(self, request, question_pk, pk=None):
+        newsletter = self.get_object()
+        if newsletter.status in (
+            Newsletter.Status.UPCOMING,
+            Newsletter.Status.INPROGRESS,
+        ):
+            question = get_object_or_404(newsletter.questions, pk=question_pk)
+            newsletter.questions.remove(question)
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            status=status.HTTP_400_BAD_REQUEST,
+            data={
+                "message": "Unable to remove questions for Inactive or Delivered Newsletter"
+            },
+        )
+
+    @action(detail=True, methods=["POST"], url_path="questions/batch")
+    def batch_questions(self, request, pk=None):
+        newsletter = self.get_object()
+        if newsletter.status in (
+            Newsletter.Status.UPCOMING,
+            Newsletter.Status.INPROGRESS,
+        ):
+            serializer = QuestionCreateSerializer(data=request.data, many=True)
+            serializer.is_valid(raise_exception=True)
+
+            author = request.user.name
+            new_questions = []
+            for question in serializer.data:
+                new_question = Question(
+                    question=question["question"], author=author, group=newsletter.group
+                )
+                new_questions.append(new_question)
+
+            created_questions = Question.objects.bulk_create(new_questions)
+            newsletter.questions.add(*created_questions)
+            return Response(status=status.HTTP_201_CREATED)
+        return Response(
+            status=status.HTTP_400_BAD_REQUEST,
+            data={
+                "message": "Can't add questions for Inactive or Delivered newsletter"
+            },
+        )
 
 
 class AnswerViewSet(viewsets.ViewSet):
@@ -110,8 +167,3 @@ class AnswerViewSet(viewsets.ViewSet):
                     updated_answers.append(answer)
             Answer.objects.bulk_update(updated_answers, fields=["answer"])
             return Response(status=status.HTTP_200_OK)
-
-
-class QuestionViewSet(viewsets.ModelViewSet):
-    queryset = Question.objects.all()
-    serializer_class = QuestionSerializer
