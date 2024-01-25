@@ -19,12 +19,11 @@ from rest_framework.routers import DefaultRouter
 
 from groups.views import GroupViewSet
 from magiclinklogin.views import LoginView, MagicLinkView
-from newsletters.views import AnswerViewSet, NewsletterViewSet, QuestionViewSet
+from newsletters.views import AnswerViewSet, NewsletterViewSet
 from users.views import UserViewSet
 
 router = DefaultRouter()
 router.register(r"newsletters", NewsletterViewSet, basename="newsletter")
-router.register(r"questions", QuestionViewSet, basename="question")
 router.register(r"groups", GroupViewSet, basename="group")
 router.register(
     r"newsletters/(?P<newsletter_id>[^/.]+)/answers",

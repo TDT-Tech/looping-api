@@ -20,6 +20,12 @@ class QuestionSerializer(serializers.ModelSerializer):
         extra_kwargs = {"id": {"required": False}}
 
 
+class QuestionCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Question
+        fields = ("question",)
+
+
 class NewsletterCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Newsletter

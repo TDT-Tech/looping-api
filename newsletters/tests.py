@@ -4,7 +4,7 @@ from django.test import TestCase
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from newsletters.models import Answer, Newsletter
+from newsletters.models import Answer, Newsletter, Question
 from newsletters.serializers import NewsletterCreateSerializer, NewsletterSerializer
 from utils.tests.factory import (
     AnswerFactory,
@@ -101,6 +101,55 @@ class NewsletterSerializerTests(TestCase):
                 question_id=self.second_question.id, newsletter=newsletter
             ).exists()
         )
+
+
+class NewsletterQuestionActionTests(APITestCase):
+    def setUp(self):
+        self.user = UserWithGroupFactory()
+        self.group = self.user.group_set.first()
+        self.newsletter = NewsletterFactory(
+            group=self.group, questions=[QuestionFactory(group=self.group)]
+        )
+        self.questions_url = f"/newsletters/{self.newsletter.id}/questions/"
+        self.client.force_authenticate(user=self.user)
+
+    def test_retrieve_newsletter_questions_succeeds(self):
+        response = self.client.get(self.questions_url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        data = response.data
+        self.assertEqual(1, len(data))
+        self.assertEqual(data[0]["id"], self.newsletter.questions.first().id)
+
+    def test_retrieve_newlestter_questions_fails_for_non_member(self):
+        non_group_member = UserFactory(email="test@test.com")
+        self.client.force_authenticate(user=non_group_member)
+        response = self.client.get(self.questions_url)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_batch_adding_questions_succeeds(self):
+        new_questions = [
+            {
+                "question": "How are you today?",
+            },
+            {
+                "question": "Whats your goal for this year",
+            },
+        ]
+        response = self.client.post(
+            f"{self.questions_url}batch/", data=new_questions, format="json"
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.newsletter.refresh_from_db()
+        self.assertEqual(self.newsletter.questions.count(), 3)
+
+    def test_deleting_question_succeeds(self):
+        question_id = self.newsletter.questions.first().id
+        response = self.client.delete(f"{self.questions_url}{question_id}/")
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.newsletter.refresh_from_db()
+        self.assertEqual(self.newsletter.questions.count(), 0)
+        question = Question.objects.filter(id=question_id).first()
+        self.assertIsNotNone(question)
 
 
 class AnswerViewSetTests(APITestCase):
