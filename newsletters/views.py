@@ -4,6 +4,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from groups.models import Group
 from newsletters.models import Answer, Newsletter, Question
 from newsletters.permissions import IsGroupMember, NewsletterAdminAllMemberReadOnly
 from newsletters.serializers import (
@@ -20,6 +21,12 @@ class NewsletterViewSet(viewsets.ModelViewSet):
     queryset = Newsletter.objects.all()
     serializer_class = NewsletterSerializer
     permission_classes = [NewsletterAdminAllMemberReadOnly]
+
+    def get_queryset(self):
+        user_groups = Group.objects.filter(users=self.request.user).values_list(
+            "id", flat=True
+        )
+        return self.queryset.filter(group_id__in=user_groups)
 
     @action(detail=True, methods=["GET"])
     def questions(self, request, pk=None):

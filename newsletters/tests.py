@@ -8,6 +8,7 @@ from newsletters.models import Answer, Newsletter, Question
 from newsletters.serializers import NewsletterCreateSerializer, NewsletterSerializer
 from utils.tests.factory import (
     AnswerFactory,
+    GroupFactory,
     GroupMemberFactory,
     NewsletterFactory,
     QuestionFactory,
@@ -103,14 +104,15 @@ class NewsletterSerializerTests(TestCase):
         )
 
 
-class NewsletterQuestionActionTests(APITestCase):
+class NewsletterViewSetTests(APITestCase):
     def setUp(self):
         self.user = UserWithGroupFactory()
         self.group = self.user.group_set.first()
         self.newsletter = NewsletterFactory(
             group=self.group, questions=[QuestionFactory(group=self.group)]
         )
-        self.questions_url = f"/newsletters/{self.newsletter.id}/questions/"
+        self.newsletter_url = "/newsletters/"
+        self.questions_url = f"{self.newsletter_url}{self.newsletter.id}/questions/"
         self.client.force_authenticate(user=self.user)
 
     def test_retrieve_newsletter_questions_succeeds(self):
@@ -120,11 +122,11 @@ class NewsletterQuestionActionTests(APITestCase):
         self.assertEqual(1, len(data))
         self.assertEqual(data[0]["id"], self.newsletter.questions.first().id)
 
-    def test_retrieve_newlestter_questions_fails_for_non_member(self):
-        non_group_member = UserFactory(email="test@test.com")
+    def test_retrieve_newsletter_questions_fails_for_non_member(self):
+        non_group_member = UserFactory(email="test2@test.com")
         self.client.force_authenticate(user=non_group_member)
         response = self.client.get(self.questions_url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_batch_adding_questions_succeeds(self):
         new_questions = [
@@ -150,6 +152,38 @@ class NewsletterQuestionActionTests(APITestCase):
         self.assertEqual(self.newsletter.questions.count(), 0)
         question = Question.objects.filter(id=question_id).first()
         self.assertIsNotNone(question)
+
+    def test_queryset_only_returns_users_group_newsletter(self):
+        new_user = UserWithGroupFactory(email="test@test.com")
+        new_group = new_user.group_set.first()
+        NewsletterFactory(
+            group=new_group, questions=[QuestionFactory(group=self.group)]
+        )
+        response = self.client.get(self.newsletter_url)
+        data = response.json()
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["id"], self.newsletter.id)
+
+    def test_queryset_returns_all_newsletters_when_user_in_multiple(self):
+        new_group = GroupFactory()
+        GroupMemberFactory(group=new_group, user=self.user)
+        NewsletterFactory(
+            group=new_group, questions=[QuestionFactory(group=self.group)]
+        )
+        response = self.client.get(self.newsletter_url)
+        data = response.json()
+        self.assertEqual(len(data), 2)
+
+    def test_queryset_returns_all_newsletter_when_group_has_many(self):
+        NewsletterFactory(
+            group=self.group, questions=[QuestionFactory(group=self.group)]
+        )
+        NewsletterFactory(
+            group=self.group, questions=[QuestionFactory(group=self.group)]
+        )
+        response = self.client.get(self.newsletter_url)
+        data = response.json()
+        self.assertEqual(len(data), 3)
 
 
 class AnswerViewSetTests(APITestCase):
@@ -361,7 +395,7 @@ class NewsletterAdminAllButMemberReadOnlyPermissionsTests(APITestCase):
     def test_user_cannot_access_newsletter_without_membership(self):
         self.client.force_authenticate(user=self.user_with_no_group)
         response = self.client.get(self.newsletter_url)
-        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_user_can_access_newsletter_with_membership(self):
         self.client.force_authenticate(user=self.user)
