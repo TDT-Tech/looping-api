@@ -38,6 +38,24 @@ class NewsletterSerializerTests(TestCase):
         self.assertEqual(new_newsletter.questions.first(), self.question)
         self.assertIsNotNone(new_newsletter.issue_date)
 
+    def test_create_doesnt_add_invalid_question_id(self):
+        serializer_data = {
+            "group": self.group.id,
+            "questions": [self.question.id, -1],
+            "status": Newsletter.Status.INPROGRESS,
+        }
+        serializer = NewsletterCreateSerializer(data=serializer_data)
+        self.assertEqual(serializer.is_valid(), False)
+
+    def test_create_doesnt_add_nonexistent_group_id(self):
+        serializer_data = {
+            "group": -1,
+            "questions": [self.question.id],
+            "status": Newsletter.Status.INPROGRESS,
+        }
+        serializer = NewsletterCreateSerializer(data=serializer_data)
+        self.assertEqual(serializer.is_valid(), False)
+
     def test_update_succeeds(self):
         newsletter = NewsletterFactory(questions=[self.question], group=self.group)
         self.assertEqual(newsletter.questions.first(), self.question)
