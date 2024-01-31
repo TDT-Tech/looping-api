@@ -1,4 +1,6 @@
 # Create your tests here.
+import datetime
+
 from django.forms.models import model_to_dict
 from django.test import TestCase
 from rest_framework import status
@@ -37,6 +39,25 @@ class NewsletterSerializerTests(TestCase):
 
         self.assertEqual(new_newsletter.questions.first(), self.question)
         self.assertIsNotNone(new_newsletter.issue_date)
+
+    def test_create_newsletter_based_off_previous_issue_date(self):
+        for _ in range(2):
+            serializer_data = {
+                "group": self.group.id,
+                "questions": [self.question.id],
+                "status": Newsletter.Status.INPROGRESS,
+            }
+            serializer = NewsletterCreateSerializer(data=serializer_data)
+            serializer.is_valid()
+            new_newsletter = serializer.save()
+            new_newsletter.refresh_from_db()
+        newsletters = Newsletter.objects.filter(group_id=self.group.id).order_by(
+            "issue_date"
+        )
+        self.assertEqual(
+            newsletters[0].issue_date + datetime.timedelta(days=14),
+            newsletters[1].issue_date,
+        )
 
     def test_create_doesnt_add_invalid_question_id(self):
         serializer_data = {
