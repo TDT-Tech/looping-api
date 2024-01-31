@@ -34,10 +34,11 @@ class NewsletterCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         questions = validated_data.pop("questions")
         group = validated_data["group"]
+        last_newsletter = (
+            Newsletter.objects.filter(group_id=group.id).order_by("-issue_date").first()
+        )
         last_issue_date = (
-            group.last_issue_date.date()
-            if group.last_issue_date
-            else datetime.date.today()
+            datetime.date.today() if not last_newsletter else last_newsletter.issue_date
         )
 
         validated_data["issue_date"] = calculate_next_issue_date(
