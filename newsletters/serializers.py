@@ -64,6 +64,7 @@ class NewsletterSerializer(serializers.ModelSerializer):
         fields = ("id", "status", "issue_date", "group", "questions")
 
     def update(self, instance, validated_data):
+        previous_status = instance.status
         instance.status = validated_data.get("status", instance.status)
         instance.issue_date = validated_data.get("issue_date", instance.issue_date)
         # Only update questions for Upcoming or In-Progress newsletters
@@ -90,6 +91,23 @@ class NewsletterSerializer(serializers.ModelSerializer):
                     questions.append(q)
             instance.questions.set(questions)
         instance.save()
+        # If we make an inprogress newsletter inactive, need to
+        # mark another newsletter as inprogress
+        if (
+            previous_status == Newsletter.Status.INPROGRESS
+            and instance.status == Newsletter.Status.INACTIVE
+        ):
+            next_newsletter = (
+                Newsletter.objects.filter(
+                    group_id=instance.group.id, status=Newsletter.Status.UPCOMING
+                )
+                .order_by("issue_date")
+                .first()
+            )
+            if next_newsletter:
+                next_newsletter.status = Newsletter.Status.INPROGRESS
+                next_newsletter.save()
+
         return instance
 
 

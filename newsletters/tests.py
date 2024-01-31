@@ -103,6 +103,24 @@ class NewsletterSerializerTests(TestCase):
 
         self.assertFalse(updated_newsletter.questions.exists())
 
+    def test_making_inprogress_newsletter_inactive_marks_another_as_inprogress(self):
+        newsletter = NewsletterFactory(
+            questions=[self.question],
+            group=self.group,
+            status=Newsletter.Status.INPROGRESS,
+        )
+        next_newsletter = NewsletterFactory(questions=[self.question], group=self.group)
+        updated_data = {
+            "group": self.group.id,
+            "questions": [model_to_dict(self.question)],
+            "status": Newsletter.Status.INACTIVE,
+        }
+        updated_serializer = NewsletterSerializer(newsletter, data=updated_data)
+        updated_serializer.is_valid()
+        updated_serializer.save()
+        next_newsletter.refresh_from_db()
+        self.assertEqual(next_newsletter.status, Newsletter.Status.INPROGRESS)
+
     def test_update_fails_if_newsletter_status_not_upcoming_or_inprogress(self):
         newsletter = NewsletterFactory(questions=[self.question], group=self.group)
         self.assertEqual(newsletter.questions.first(), self.question)
