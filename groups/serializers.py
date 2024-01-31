@@ -1,5 +1,3 @@
-import datetime
-
 from rest_framework import serializers
 
 from groups.models import Group, Member
