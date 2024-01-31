@@ -17,7 +17,7 @@ class Newsletter(models.Model):
         DELIVERED = "DELIVERED"
         INACTIVE = "INACTIVE"
 
-    status = models.CharField(choices=Status.choices, default=Status.INPROGRESS)
+    status = models.CharField(choices=Status.choices, default=Status.UPCOMING)
     issue_date = models.DateField(blank=True)
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     questions = models.ManyToManyField(Question)
