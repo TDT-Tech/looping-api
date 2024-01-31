@@ -40,6 +40,17 @@ class NewsletterSerializerTests(TestCase):
         self.assertEqual(new_newsletter.questions.first(), self.question)
         self.assertIsNotNone(new_newsletter.issue_date)
 
+    def test_create_newsletter_inprogress_if_no_other_inprogress(self):
+        serializer_data = {
+            "group": self.group.id,
+            "questions": [self.question.id],
+        }
+        serializer = NewsletterCreateSerializer(data=serializer_data)
+        serializer.is_valid()
+        new_newsletter = serializer.save()
+        new_newsletter.refresh_from_db()
+        self.assertEqual(new_newsletter.status, Newsletter.Status.INPROGRESS)
+
     def test_create_newsletter_based_off_previous_issue_date(self):
         for _ in range(2):
             serializer_data = {

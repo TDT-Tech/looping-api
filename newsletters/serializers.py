@@ -34,16 +34,23 @@ class NewsletterCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         questions = validated_data.pop("questions")
         group = validated_data["group"]
+
         last_newsletter = (
             Newsletter.objects.filter(group_id=group.id).order_by("-issue_date").first()
         )
         last_issue_date = (
             datetime.date.today() if not last_newsletter else last_newsletter.issue_date
         )
-
         validated_data["issue_date"] = calculate_next_issue_date(
             group.schedule, last_issue_date
         )
+
+        inprogress_newsletter = Newsletter.objects.filter(
+            group_id=group.id, status=Newsletter.Status.INPROGRESS
+        ).first()
+        if not inprogress_newsletter:
+            validated_data["status"] = Newsletter.Status.INPROGRESS
+
         newsletter = Newsletter.objects.create(**validated_data)
         newsletter.questions.set(questions)
         return newsletter
