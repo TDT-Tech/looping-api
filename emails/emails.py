@@ -1,6 +1,7 @@
-from templates import invite, newsletter, reply
+from templates import invite, magiclink, newsletter, reply
 
-data = {
+# TODO: Remove once we finalize payloads, keep for testing Sample data payloads
+"""data = {
     "PROFILE_PICTURE_HEADER": "https://i.imgur.com/VTyOmUA.jpeg",
     "GROUP_NAME": "TDT",
     "ISSUE_NUMBER": "12",
@@ -42,7 +43,7 @@ invite_data = {
     "group_name": "TDT",
     "reply_url": "http://reddit.com",
     "issue_date": "March, 1st, 2024",
-}
+} """
 
 
 def build_invite(data):
@@ -130,3 +131,10 @@ def build_reply(data):
     )
 
     return reply_html
+
+
+def build_magiclink(data):
+    magiclink_html = magiclink.MAGIC_LINK_OUTLINE.format(
+        LOGO_URL=data["LOGO_URL"], MAGIC_LINK_URL=data["MAGIC_LINK_URL"]
+    )
+    return magiclink_html
