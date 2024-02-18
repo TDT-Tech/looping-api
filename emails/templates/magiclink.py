@@ -207,16 +207,10 @@ MAGIC_LINK_OUTLINE = """
               </td>
             </tr>
           </tbody>
-        </table>
-        
+        </table>  
       </div>
-    
-      
       <!--[if mso | IE]></td></tr></table></td></tr><tr><td class="" width="600px" ><table align="center" border="0" cellpadding="0" cellspacing="0" class="" role="presentation" style="width:580px;" width="580" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->
-    
-      
       <div  style="margin:0px auto;max-width:580px;">
-        
         <table
            align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;"
         >
@@ -225,53 +219,37 @@ MAGIC_LINK_OUTLINE = """
               <td
                  style="direction:ltr;font-size:0px;padding:0px;text-align:center;"
               >
-                <!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td class="" style="vertical-align:top;width:580px;" ><![endif]-->
-            
+                <!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td class="" style="vertical-align:top;width:580px;" ><![endif]-->   
       <div
          class="mj-column-per-100 mj-outlook-group-fix" style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;"
-      >
-        
+      > 
       <table
          border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%"
       >
         <tbody>
-          
               <tr>
                 <td
                    align="center" style="font-size:0px;padding:30px 0px 20px 0px;word-break:break-word;"
-                >
-                  
+                >           
       <p
          style="border-top:solid 1px #eaeaea;font-size:1px;margin:0px auto;width:100%;"
       >
       </p>
-      
       <!--[if mso | IE]><table align="center" border="0" cellpadding="0" cellspacing="0" style="border-top:solid 1px #eaeaea;font-size:1px;margin:0px auto;width:580px;" role="presentation" width="580px" ><tr><td style="height:0;line-height:0;"> &nbsp;
 </td></tr></table><![endif]-->
-    
-    
                 </td>
               </tr>
-            
         </tbody>
       </table>
-    
       </div>
-    
           <!--[if mso | IE]></td></tr></table><![endif]-->
               </td>
             </tr>
           </tbody>
         </table>
-        
       </div>
-    
-      
       <!--[if mso | IE]></td></tr></table></td></tr><tr><td class="" width="600px" ><table align="center" border="0" cellpadding="0" cellspacing="0" class="" role="presentation" style="width:580px;" width="580" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->
-    
-      
-      <div  style="margin:0px auto;max-width:580px;">
-        
+      <div  style="margin:0px auto;max-width:580px;">  
         <table
            align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;"
         >
@@ -280,28 +258,23 @@ MAGIC_LINK_OUTLINE = """
               <td
                  style="direction:ltr;font-size:0px;padding:0px;text-align:center;"
               >
-                <!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td class="" style="vertical-align:top;width:580px;" ><![endif]-->
-            
+                <!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td class="" style="vertical-align:top;width:580px;" ><![endif]-->       
       <div
          class="mj-column-per-100 mj-outlook-group-fix" style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;"
-      >
-        
+      >    
       <table
          border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%"
       >
-        <tbody>
-          
+        <tbody>  
               <tr>
                 <td
                    align="left" style="font-size:0px;padding:0px;word-break:break-word;"
-                >          
+                >        
       <div
          style="font-family:Arial, 'Helvetica Neue', Helvetica, sans-serif;font-size:12px;line-height:1.5;text-align:left;color:#707070;"
       >Got questions, feedback, or need help?</div>
-    
                 </td>
-              </tr>
-            
+              </tr> 
               <tr>
                 <td
                    align="left" style="font-size:0px;padding:0px;word-break:break-word;"
@@ -319,7 +292,6 @@ MAGIC_LINK_OUTLINE = """
             </tr>
           </tbody>
         </table>
-        
       </div>
       <!--[if mso | IE]></td></tr></table></td></tr></table><![endif]-->
               </td>

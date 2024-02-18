@@ -1,4 +1,8 @@
-from templates import invite, magiclink, newsletter, reply
+import os
+
+from django.core.mail import EmailMessage
+
+from emails.templates import invite, magiclink, newsletter, reply
 
 # TODO: Remove once we finalize payloads, keep for testing Sample data payloads
 """data = {
@@ -133,8 +137,19 @@ def build_reply(data):
     return reply_html
 
 
-def build_magiclink(data):
+def build_magiclink(logo_url: str, magic_link_url: str) -> str:
     magiclink_html = magiclink.MAGIC_LINK_OUTLINE.format(
-        LOGO_URL=data["LOGO_URL"], MAGIC_LINK_URL=data["MAGIC_LINK_URL"]
+        LOGO_URL=logo_url, MAGIC_LINK_URL=magic_link_url
     )
     return magiclink_html
+
+
+def send_email(subject: str, message: str, receipient_list: list[str]) -> None:
+    email = EmailMessage(
+        subject=subject,
+        body=message,
+        from_email=os.environ.get("EMAIL_HOST_USER"),
+        to=receipient_list,
+    )
+    email.content_subtype = "html"
+    email.send()
